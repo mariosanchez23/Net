@@ -19,24 +19,24 @@ import SystemConfiguration
 
 public class NetChecker {
     class func isConnectedToNetwork() -> Bool {
+        var Status:Bool = false
+        let url = NSURL(string: "http://google.com/")
+        let request = NSMutableURLRequest(URL: url!)
+        request.HTTPMethod = "HEAD"
+        request.cachePolicy = NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData
+        request.timeoutInterval = 10.0
         
+        var response: NSURLResponse?
+        do{
+            _ = try NSURLConnection.sendSynchronousRequest(request, returningResponse: &response) as NSData?
+        }catch{}
         
-        var zeroAddress = sockaddr_in()
-        zeroAddress.sin_len = UInt8(sizeofValue(zeroAddress))
-        zeroAddress.sin_family = sa_family_t(AF_INET)
-        
-        guard let defaultRouteReachability = withUnsafePointer(&zeroAddress, {
-            SCNetworkReachabilityCreateWithAddress(nil, UnsafePointer($0))
-        }) else {
-            return false
+        if let httpResponse = response as? NSHTTPURLResponse {
+            if httpResponse.statusCode == 200 {
+                Status = true
+            }
         }
         
-        var flags : SCNetworkReachabilityFlags = []
-        if SCNetworkReachabilityGetFlags(defaultRouteReachability, &flags){
-            return false
-        }
-        
-        let isReachable = flags.contains(.Reachable)
-        let needsConnection = flags.contains(.ConnectionRequired)
-        return (isReachable && !needsConnection)    }
+        return Status
+    }
 }
